@@ -1,0 +1,33 @@
+# Настройки
+language: python
+sudo: false
+
+# Собирать на ветке 'travis'
+branches:
+  only:
+  - travis
+
+# Установка
+install:
+  - pip install -r requirements.txt
+  - mkdir deploy
+  - cd deploy/
+  - git clone https://github.com/xMrVizzy/MC-Texture-Changes.git .
+  - cd ../
+
+# Скрипты
+script:
+  - python projectx.py
+
+# Деплой
+deploy:
+  provider: pages
+  github-token: $GITHUB_TOKEN
+  committer-from-gh: true
+  skip-cleanup: true
+  keep-history: true
+  local-dir: deploy
+  repo: xMrVizzy/MC-Texture-Changes
+  target-branch: master
+  on:
+    branch: travis
