@@ -30,4 +30,4 @@ deploy:
   repo: xMrVizzy/MC-Texture-Changes
   target-branch: master
   on:
-    branch: master
+    branch: travis
