@@ -7,7 +7,7 @@ import shutil
 import errno
 
 VERSIONS_JSON = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
-LATEST_VERSION = 0
+LATEST_VERSION = 1
 
 def fetch_json(url):
 	response = requests.get(url)
