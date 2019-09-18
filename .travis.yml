@@ -17,7 +17,7 @@ install:
 
 # Скрипты
 script:
-  - python3 projectx.py
+  - python projectx.py
 
 # Деплой
 deploy:
