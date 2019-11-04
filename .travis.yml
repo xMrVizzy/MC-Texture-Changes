@@ -17,8 +17,8 @@ install:
 
 # Скрипты
 script:
-  - python3 compare.py release 10
-  - python3 compare.py snapshot 10
+  - python3 compare.py release 3
+  - python3 compare.py snapshot 3
 
 # Деплой
 deploy:
