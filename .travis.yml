@@ -17,7 +17,8 @@ install:
 
 # Скрипты
 script:
-  - python projectx.py
+  - python3 compare.py release 10
+  - python3 compare.py snapshot 10
 
 # Деплой
 deploy:

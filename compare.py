@@ -1,30 +1,41 @@
 import os
+import sys
 import json
-import requests
 import zipfile
+import requests
 import filecmp
 import shutil
 import errno
 
 VERSIONS_JSON = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
-LATEST_VERSION = 0
 
-def fetch_json(url):
+def fetchJson(url):
 	response = requests.get(url)
 	return response.json()
 
-def save_temp(urls):
+def getURLs(type, number):
+    global VERSIONS_JSON
+    urls = []
+
+    for item in fetchJson(VERSIONS_JSON)['versions']:
+        if len(urls) < (number + 1):
+            if item['type'] == type:
+                urls.append(item['url'])
+    
+    return urls
+
+def saveTemp(urls):
 	names = []
 	if not os.path.exists('temp'):
 		os.mkdir('temp')
 	
 	for url in urls:
-		name = fetch_json(url)['id']
+		name = fetchJson(url)['id']
 		names.append(name)
 		
 		os.mkdir('temp/' + name)
 		with open('temp/' + name + '.zip', 'wb') as f:
-			f.write(requests.get(fetch_json(url)['downloads']['client']['url']).content)
+			f.write(requests.get(fetchJson(url)['downloads']['client']['url']).content)
 		
 		zip_ref = zipfile.ZipFile('temp/' + name + '.zip', 'r')
 		zip_ref.extractall('temp/' + name)
@@ -32,21 +43,21 @@ def save_temp(urls):
 	
 	return names
 
-def diff_folders(latest, previous, delFolder = False):
+def diffFolders(new, old, type, delFolder = False):
 	added =[]
 	changed = []
 	deleted = []
 	
 	if (delFolder == False):
-		diff_folders(previous, latest, True)
+		diffFolders(old, new, type, True)
 
-	for root, dirs, files in os.walk('temp/' + latest):
+	for root, dirs, files in os.walk('temp/' + new):
 		for name in files:
 			src = os.path.join(root, name)
-			need_check = src.startswith('temp/' + latest + "/assets/minecraft/textures/")
+			need_check = src.startswith('temp/' + new + "/assets/minecraft/textures/")
 			
 			if need_check:
-				dest = src.replace(latest, previous, 1)
+				dest = src.replace(new, old, 1)
 				
 				if (delFolder == False):
 					if not os.path.exists(dest):
@@ -58,15 +69,15 @@ def diff_folders(latest, previous, delFolder = False):
 						deleted.append(src)
 	
 	for item in added:
-		save_diff(latest, "../deploy/" + latest +"/added", item)
+		saveDiff(new, "../deploy/" + type.capitalize() + "s/" + new + "/added", item)
 	
 	for item in changed:
-		save_diff(latest, "../deploy/" + latest +"/changed", item)
+		saveDiff(new, "../deploy/" + type.capitalize() + "s/" + new + "/changed", item)
 	
 	for item in deleted:
-		save_diff(latest, "../deploy/" + previous +"/deleted", item)
+		saveDiff(new, "../deploy/" + type.capitalize() + "s/" + old + "/deleted", item)
 
-def save_diff(base_folder, new_folder, item):
+def saveDiff(base_folder, new_folder, item):
 	src = item
 	dest = item.replace(base_folder + "/assets/minecraft/textures/", new_folder + "/")
 	
@@ -80,10 +91,14 @@ def save_diff(base_folder, new_folder, item):
 		shutil.copy(src, dest)
 
 def main():
-	versions_url = [x['url'] for x in fetch_json(VERSIONS_JSON)['versions'][LATEST_VERSION:LATEST_VERSION + 2]]
-	folders = save_temp(versions_url)
-	
-	diff_folders(folders[0], folders[1])
+    type = sys.argv[1]
+    number = int(sys.argv[2])
+
+    urls = getURLs(type, number)
+    folders = saveTemp(urls)
+
+    for x in range(number):
+        diffFolders(folders[x], folders[x + 1], type)
 
 if __name__ == '__main__':
 	main()
