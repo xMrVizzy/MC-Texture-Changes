@@ -16,13 +16,21 @@ def fetch_json(url):
 
 def get_urls(type, number):
     global VERSIONS_JSON
-    urls = []
+    urls = {}
 
     for item in fetch_json(VERSIONS_JSON)['versions']:
         if len(urls) < (number + 1):
-            if item['type'] == type: urls.append(item['url'])
+            if item['type'] == type:
+                if len(urls.keys()) == 0:
+                    urls[item['id']] = item['url']
+                else:
+                    if type == 'release':
+                        latest = urls.keys()[-1].split('.')[1]
+                        current = item['id'].split('.')[1]
+                        if current != latest:
+                            urls[item['id']] = item['url']
     
-    return urls
+    return urls.values()
 
 def save_temp(urls, type):
     names = []
