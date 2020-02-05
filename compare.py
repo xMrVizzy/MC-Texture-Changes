@@ -25,7 +25,7 @@ def get_urls(type, number):
                     urls[item['id']] = item['url']
                 else:
                     if type == 'release':
-                        latest = urls.keys()[-1].split('.')[1]
+                        latest = list(urls.keys())[-1].split('.')[1]
                         current = item['id'].split('.')[1]
                         if current != latest:
                             urls[item['id']] = item['url']
