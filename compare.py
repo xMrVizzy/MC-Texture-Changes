@@ -29,6 +29,7 @@ def get_urls(type, number):
                         current = item['id'].split('.')[1]
                         if current != latest:
                             urls[item['id']] = item['url']
+                    else: urls[item['id']] = item['url']
     
     return urls.values()
 
