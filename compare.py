@@ -10,42 +10,35 @@ import re
 
 VERSIONS_JSON = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
 
-def fetchJson(url):
+def fetch_json(url):
     response = requests.get(url)
     return response.json()
 
-def getURLs(type, number):
+def get_urls(type, number):
     global VERSIONS_JSON
     urls = []
 
-    for item in fetchJson(VERSIONS_JSON)['versions']:
+    for item in fetch_json(VERSIONS_JSON)['versions']:
         if len(urls) < (number + 1):
-            if item['type'] == type:
-                if len(urls) == 0:
-                    urls.append(item['url'])
-                else:
-                    latest_url = re.search("(?<=\/1)(.*?)(?=.json)", urls[-1]).group().split('.')[1]
-                    new_url = item['id'].split('.')[1]
-                    if new_url != latest_url:
-                        urls.append(item['url'])
+            if item['type'] == type: urls.append(item['url'])
     
     return urls
 
-def saveTemp(urls, type):
+def save_temp(urls, type):
     names = []
     if not os.path.exists('temp'):
         os.mkdir('temp')
     
     for url in urls:
         if type == 'release':
-            name = '1.' + fetchJson(url)['id'].split('.')[1]
+            name = '1.' + fetch_json(url)['id'].split('.')[1]
         else:
-            name = fetchJson(url)['id']
+            name = fetch_json(url)['id']
         names.append(name)
         
         os.mkdir('temp/' + name)
         with open('temp/' + name + '.zip', 'wb') as f:
-            f.write(requests.get(fetchJson(url)['downloads']['client']['url']).content)
+            f.write(requests.get(fetch_json(url)['downloads']['client']['url']).content)
         
         zip_ref = zipfile.ZipFile('temp/' + name + '.zip', 'r')
         zip_ref.extractall('temp/' + name)
@@ -53,13 +46,13 @@ def saveTemp(urls, type):
     
     return names
 
-def diffFolders(new, old, type, delFolder = False):
+def diff_folders(new, old, type, delFolder = False):
     added =[]
     changed = []
     deleted = []
     
     if (delFolder == False):
-        diffFolders(old, new, type, True)
+        diff_folders(old, new, type, True)
 
     for root, dirs, files in os.walk('temp/' + new):
         for name in files:
@@ -79,15 +72,15 @@ def diffFolders(new, old, type, delFolder = False):
                         deleted.append(src)
     
     for item in added:
-        saveDiff(new, "../deploy/" + type.capitalize() + "s/" + new + "/added", item)
+        save_diff(new, "../deploy/" + type.capitalize() + "s/" + new + "/added", item)
     
     for item in changed:
-        saveDiff(new, "../deploy/" + type.capitalize() + "s/" + new + "/changed", item)
+        save_diff(new, "../deploy/" + type.capitalize() + "s/" + new + "/changed", item)
     
     for item in deleted:
-        saveDiff(new, "../deploy/" + type.capitalize() + "s/" + old + "/deleted", item)
+        save_diff(new, "../deploy/" + type.capitalize() + "s/" + old + "/deleted", item)
 
-def saveDiff(base_folder, new_folder, item):
+def save_diff(base_folder, new_folder, item):
     src = item
     dest = item.replace(base_folder + "/assets/minecraft/textures/", new_folder + "/")
     
@@ -104,11 +97,11 @@ def main():
     type = sys.argv[1]
     number = int(sys.argv[2])
 
-    urls = getURLs(type, number)
-    folders = saveTemp(urls, type)
+    urls = get_urls(type, number)
+    folders = save_temp(urls, type)
 
     for x in range(number):
-        diffFolders(folders[x], folders[x + 1], type)
+        diff_folders(folders[x], folders[x + 1], type)
 
 if __name__ == '__main__':
     main()
